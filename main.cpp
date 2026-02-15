@@ -54,20 +54,20 @@ bool onGlass(Rectangle& player, vector<vector<Rectangle>>& plates, int countOfPl
     }
     return false;
 }
-pair<bool, int> isBroken(Rectangle& player, vector<vector<Rectangle>>& plates, vector<vector<int>>& glassStates, int countOfPlates) {
+bool isBroken(Rectangle& player, vector<vector<Rectangle>>& plates, vector<vector<int>>& glassStates, int countOfPlates) {
     for (int i = 0; i < countOfPlates; i++) {
         if (CheckCollisionRecs(player, plates[i][0])) {
             if (glassStates[i][0] == 0) {
-                return { true, i };
+                return true;
             }
         }
         else if (CheckCollisionRecs(player, plates[i][1])) {
             if (glassStates[i][1] == 0) {
-                return { true, i };
+                return true;
             }
         }
     }
-    return { false, -1 };
+    return false;
 }
 bool isIntoGap(Rectangle& player, Rectangle& startArea, Rectangle& finishArea, bool onGlass) {
     if (CheckCollisionRecs(player, startArea) or CheckCollisionRecs(player, finishArea)) {
@@ -211,8 +211,7 @@ int main() {
         if (playerState == 0 and isIntoGap(player, startArea, finishArea, onGlas)) {
             isplayeralive = false;
         }
-        pair<bool, int> broke = isBroken(player, plates, glassStates, countOfPlates);
-        if (playerState == 0 and broke.first) {
+        if (playerState == 0 and isBroken(player, plates, glassStates, countOfPlates)) {
             isplayeralive = false;
 
         }
