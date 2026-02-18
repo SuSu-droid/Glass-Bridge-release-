@@ -1,7 +1,8 @@
-﻿#include <iostream>
 #include <raylib.h>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <ctime>
 using namespace std;
 
 #define WINDOW_WIDTH 1000
@@ -102,6 +103,18 @@ void initPlates(vector<vector<Rectangle>>& plates, int countOfPlates) {
     }
 }
 int main() {
+    InitAudioDevice();
+    Sound sFall = LoadSound("sounds/scream.wav");
+    Sound sBrake = LoadSound("sounds/glass_brake.wav");
+
+    SetSoundVolume(sFall, 0.2f);
+    SetSoundVolume(sBrake, 0.5f);
+
+    Music sTheme = LoadMusicStream("sounds/suspence.mp3");
+    SetMusicVolume(sTheme, 0.5f);
+    PlayMusicStream(sTheme);
+
+
     srand(time(NULL));
     SetTargetFPS(TARGET_FPS);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Glass bridge");
@@ -166,6 +179,7 @@ int main() {
     Rectangle finishArea{ WINDOW_WIDTH - FINISH_AREA_WIDTH, 100, FINISH_AREA_WIDTH, 300 };
     bool isplayeralive = true;
     while (!WindowShouldClose()) {
+        UpdateMusicStream(sTheme);
         BeginDrawing();
         ClearBackground(BLACK);
         DrawRectangleRec(startArea, RED);
@@ -192,16 +206,16 @@ int main() {
         }
         if (playerState == 1) {
             playerSize += PLAYER_SIZE_DELTA;
-            playerX -= PLAYER_SIZE_DELTA/2;
-            playerY -= PLAYER_SIZE_DELTA/2;
+            playerX -= PLAYER_SIZE_DELTA / 2;
+            playerY -= PLAYER_SIZE_DELTA / 2;
             if (playerSize == PLAYER_SIZE_MAX) {
                 playerState = 2;
             }
         }
         else if (playerState == 2) {
             playerSize -= PLAYER_SIZE_DELTA;
-            playerX += PLAYER_SIZE_DELTA/2;
-            playerY += PLAYER_SIZE_DELTA/2;
+            playerX += PLAYER_SIZE_DELTA / 2;
+            playerY += PLAYER_SIZE_DELTA / 2;
             if (playerSize == PLAYER_SIZE_MIN) {
                 playerState = 0;
             }
@@ -210,10 +224,12 @@ int main() {
         bool onGlas = onGlass(player, plates, countOfPlates);
         if (playerState == 0 and isIntoGap(player, startArea, finishArea, onGlas)) {
             isplayeralive = false;
+            PlaySound(sFall);
         }
         if (playerState == 0 and isBroken(player, plates, glassStates, countOfPlates)) {
             isplayeralive = false;
-
+            PlaySound(sFall);
+            PlaySound(sBrake);
         }
         for (int i = 0; i < countOfPlates; i++) {
             DrawRectangleRec(plates[i][0], { 102, 191, 255, 125 });
@@ -226,11 +242,23 @@ int main() {
         }
         EndDrawing();
     }
+
     string text;
     string newt1 = "You won, so you can get off here.";
     string newt2 = "   -Aaaaaaaaaaaaa!\n-Who was it?\n-It is a test subject 217Q6.\n-Why they can`t do it?\n-I don`t know.";
     float i = 0;
+
+
+    Music sWL;
+     
+    if (isplayeralive)
+        sWL = LoadMusicStream("sounds/victory.wav"); 
+    else
+        sWL = LoadMusicStream("sounds/lose.wav");
+    SetMusicVolume(sWL, 0.5f);
+    PlayMusicStream(sWL);
     while (!WindowShouldClose()) {
+        UpdateMusicStream(sWL);
         BeginDrawing();
         ClearBackground(BLACK);
         if (isplayeralive) {
