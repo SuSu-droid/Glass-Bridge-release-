@@ -1,7 +1,8 @@
-#include <iostream>
 #include <raylib.h>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <ctime>
 using namespace std;
 
 #define WINDOW_WIDTH 1000
@@ -28,9 +29,9 @@ using namespace std;
 #define LEVEL_2_Plates 12
 #define LEVEL_3_Plates 16
 
-#define LEVEL_1_Lives 3
-#define LEVEL_2_Lives 5
-#define LEVEL_3_Lives 7
+#define LEVEL_1_Lives 4
+#define LEVEL_2_Lives 6
+#define LEVEL_3_Lives 8
 
 int getDir() {
     if (IsKeyDown(KEY_A)) {
@@ -108,6 +109,18 @@ void initPlates(vector<vector<pair<Rectangle, bool>>>& plates, int countOfPlates
     }
 }
 int main() {
+    InitAudioDevice();
+    Sound sFall = LoadSound("sounds/scream.wav");
+    Sound sBrake = LoadSound("sounds/glass_brake.wav");
+
+    SetSoundVolume(sFall, 0.2f);
+    SetSoundVolume(sBrake, 0.5f);
+
+    Music sTheme = LoadMusicStream("sounds/suspence.mp3");
+    SetMusicVolume(sTheme, 0.5f);
+    PlayMusicStream(sTheme);
+
+
     srand(time(NULL));
     SetTargetFPS(TARGET_FPS);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Glass bridge");
@@ -176,6 +189,7 @@ int main() {
     Rectangle finishArea{ WINDOW_WIDTH - FINISH_AREA_WIDTH, 100, FINISH_AREA_WIDTH, 300 };
     bool isplayeralive = true;
     while (!WindowShouldClose()) {
+        UpdateMusicStream(sTheme);
         BeginDrawing();
         ClearBackground(BLACK);
         DrawRectangleRec(startArea, RED);
@@ -202,16 +216,16 @@ int main() {
         }
         if (playerState == 1) {
             playerSize += PLAYER_SIZE_DELTA;
-            playerX -= PLAYER_SIZE_DELTA/2;
-            playerY -= PLAYER_SIZE_DELTA/2;
+            playerX -= PLAYER_SIZE_DELTA / 2;
+            playerY -= PLAYER_SIZE_DELTA / 2;
             if (playerSize == PLAYER_SIZE_MAX) {
                 playerState = 2;
             }
         }
         else if (playerState == 2) {
             playerSize -= PLAYER_SIZE_DELTA;
-            playerX += PLAYER_SIZE_DELTA/2;
-            playerY += PLAYER_SIZE_DELTA/2;
+            playerX += PLAYER_SIZE_DELTA / 2;
+            playerY += PLAYER_SIZE_DELTA / 2;
             if (playerSize == PLAYER_SIZE_MIN) {
                 playerState = 0;
             }
@@ -224,12 +238,15 @@ int main() {
             playerY = 240.0f;
         }
         if (countOfLives != 0 and playerState == 0 and isBroken(player, plates, glassStates, countOfPlates)) {
+            PlaySound(sBrake);
             countOfLives -= 1;
             playerX = 15.0f;
             playerY = 240.0f;
         }
         if (countOfLives == 0) {
             isplayeralive = false;
+            PlaySound(sFall);
+            PlaySound(sBrake);
         }
         for (int i = 0; i < countOfPlates; i++) {
             if (plates[i][0].second) {
@@ -249,11 +266,23 @@ int main() {
         }
         EndDrawing();
     }
+
     string text;
     string newt1 = "You won, so you can get off here.";
     string newt2 = "   -Aaaaaaaaaaaaa!\n-Who was it?\n-It is a test subject 217Q6.\n-Why they can`t do it?\n-I don`t know.";
     float i = 0;
+
+
+    Music sWL;
+    int c = 0;
+    if (isplayeralive)
+        sWL = LoadMusicStream("sounds/victory.wav"); 
+    else
+        sWL = LoadMusicStream("sounds/lose.wav");
+    SetMusicVolume(sWL, 0.5f);
+    PlayMusicStream(sWL);
     while (!WindowShouldClose()) {
+        UpdateMusicStream(sWL);
         BeginDrawing();
         ClearBackground(BLACK);
         if (isplayeralive) {
@@ -267,6 +296,7 @@ int main() {
             if (i == newt1.size()) {
                 DrawText(text.c_str(), 100, 50, 50, WHITE);
                 DrawText("YOU HAVE GOOD ENDING. Press LMB to start new test.", 125, 400, 30, WHITE);
+                SetMusicVolume(sWL, 0.0f);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                     EndDrawing();
                     CloseWindow();
@@ -284,7 +314,9 @@ int main() {
             }
             if (i == newt2.size()) {
                 DrawText(text.c_str(), 100, 50, 50, WHITE);
+                PlaySound(sFall);
                 DrawText("YOU HAVE BAD ENDING. Press LMB to start new test.", 125, 400, 30, WHITE);
+                SetMusicVolume(sWL, 0.0f);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                     EndDrawing();
                     CloseWindow();
