@@ -1,4 +1,4 @@
-#include <raylib.h>
+﻿#include <raylib.h>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -15,7 +15,8 @@ using namespace std;
 #define PLAYER_SPEED 1.0
 
 #define START_AREA_WIDTH 50
-#define FINISH_AREA_WIDTH 75
+#define FINISH_AREA_WIDTH 50
+#define SKIP_DELTA 60
 #define PLATE_HEIGHT 50
 #define PLATE_TOP_Y 190.0
 #define PLATE_BOTTOM_Y 260.0
@@ -29,9 +30,9 @@ using namespace std;
 #define LEVEL_2_Plates 12
 #define LEVEL_3_Plates 16
 
-#define LEVEL_1_Lives 4
-#define LEVEL_2_Lives 6
-#define LEVEL_3_Lives 8
+#define LEVEL_1_Lives 5
+#define LEVEL_2_Lives 7
+#define LEVEL_3_Lives 9
 
 int getDir() {
     if (IsKeyDown(KEY_A)) {
@@ -87,24 +88,25 @@ bool isIntoGap(Rectangle& player, Rectangle& startArea, Rectangle& finishArea, b
 }
 void initPlates(vector<vector<pair<Rectangle, bool>>>& plates, int countOfPlates) {
     plates.clear();
-    float startX = 113.0f;
-    int stepX;
+    int spaceWidth;
     float plateWidth;
     if (countOfPlates == LEVEL_1_Plates) {
-        stepX = 100;
+        spaceWidth = 100;
         plateWidth = 50;
     }
     else if (countOfPlates == LEVEL_2_Plates) {
-        stepX = 70;
+        spaceWidth = 70;
         plateWidth = 30;
     }
     else if (countOfPlates == LEVEL_3_Plates) {
-        stepX = 50;
+        spaceWidth = 50;
         plateWidth = 25;
     }
+    spaceWidth = 38;
+    plateWidth = (WINDOW_WIDTH - FINISH_AREA_WIDTH - (START_AREA_WIDTH + SKIP_DELTA)) / (countOfPlates + 0.30) - spaceWidth;
     for (int i = 0; i < countOfPlates; i++) {
-        Rectangle topPlate = { startX + i * stepX, PLATE_TOP_Y, plateWidth, PLATE_HEIGHT };
-        Rectangle bottomPlate = { startX + i * stepX, PLATE_BOTTOM_Y, plateWidth, PLATE_HEIGHT };
+        Rectangle topPlate = { (START_AREA_WIDTH + SKIP_DELTA) + i * (spaceWidth + plateWidth), PLATE_TOP_Y, plateWidth, PLATE_HEIGHT };
+        Rectangle bottomPlate = { (START_AREA_WIDTH + SKIP_DELTA) + i * (spaceWidth + plateWidth), PLATE_BOTTOM_Y, plateWidth, PLATE_HEIGHT };
         plates.push_back({ {topPlate, true}, {bottomPlate, true} });
     }
 }
@@ -119,8 +121,6 @@ int main() {
     Music sTheme = LoadMusicStream("sounds/suspence.mp3");
     SetMusicVolume(sTheme, 0.5f);
     PlayMusicStream(sTheme);
-
-
     srand(time(NULL));
     SetTargetFPS(TARGET_FPS);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Glass bridge");
@@ -135,19 +135,19 @@ int main() {
     while (!WindowShouldClose()) {
         Vector2 mouse = GetMousePosition();
         if (CheckCollisionPointRec(mouse, rec1)) {
-            col1 = { 0, 0, 0, 75 };
-            col2 = { 0, 0, 0, 0 };
-            col3 = { 0, 0, 0, 0 };
+            col1 = { 255, 255, 255, 75 };
+            col2 = { 255, 255, 255, 0 };
+            col3 = { 255, 255, 255, 0 };
         }
         if (CheckCollisionPointRec(mouse, rec2)) {
-            col2 = { 0, 0, 0, 75 };
-            col1 = { 0, 0, 0, 0 };
-            col3 = { 0, 0, 0, 0 };
+            col2 = { 255, 255, 255, 75 };
+            col1 = { 255, 255, 255, 0 };
+            col3 = { 255, 255, 255, 0 };
         }
         if (CheckCollisionPointRec(mouse, rec3)) {
-            col3 = { 0, 0, 0, 75 };
-            col1 = { 0, 0, 0, 0 };
-            col2 = { 0, 0, 0, 0 };
+            col3 = { 255, 255, 255, 75 };
+            col1 = { 255, 255, 255, 0 };
+            col2 = { 255, 255, 255, 0 };
         }
         if (CheckCollisionPointRec(mouse, rec1) and IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             countOfPlates = LEVEL_1_Plates;
@@ -161,18 +161,18 @@ int main() {
         }
         if (CheckCollisionPointRec(mouse, rec3) and IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             countOfPlates = LEVEL_3_Plates;
-            countOfLives = LEVEL_2_Lives;
+            countOfLives = LEVEL_3_Lives;
             break;
         }
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-        DrawText("CHOOSE DIFFICULT LEVEL (1-3):", 150, 75, 40, BLACK);
+        ClearBackground(BLACK);
+        DrawText("CHOOSE DIFFICULT LEVEL (1-3):", 150, 75, 40, WHITE);
         DrawRectangleRec(rec1, col1);
         DrawRectangleRec(rec2, col2);
         DrawRectangleRec(rec3, col3);
-        DrawText("LEVEL 1", 200, 125, 20, BLACK);
-        DrawText("LEVEL 2", 200, 150, 20, BLACK);
-        DrawText("LEVEL 3", 200, 175, 20, BLACK);
+        DrawText("LEVEL 1", 200, 125, 20, WHITE);
+        DrawText("LEVEL 2", 200, 150, 20, WHITE);
+        DrawText("LEVEL 3", 200, 175, 20, WHITE);
         EndDrawing();
     }
     vector<vector<int>> glassStates(countOfPlates, vector<int>(2, 0));
@@ -258,7 +258,7 @@ int main() {
         }
         DrawRectangleRec(player, WHITE);
         for (int i = 0; i < countOfLives; i++) {
-            DrawRectangle(5 + i*40, 10, 35, 35, RED);
+            DrawRectangle(5 + i * 40, 10, 35, 35, RED);
         }
         if (!isplayeralive or (playerState == 0 and CheckCollisionRecs(player, finishArea))) {
             EndDrawing();
@@ -276,7 +276,7 @@ int main() {
     Music sWL;
     int c = 0;
     if (isplayeralive)
-        sWL = LoadMusicStream("sounds/victory.wav"); 
+        sWL = LoadMusicStream("sounds/victory.wav");
     else
         sWL = LoadMusicStream("sounds/lose.wav");
     SetMusicVolume(sWL, 0.5f);
